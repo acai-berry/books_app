@@ -4,11 +4,10 @@ from sqlalchemy.orm import sessionmaker
 
 from app.database import Base
 from app.main import app, get_session
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+from config import settings
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    settings.TEST_DATABASE, connect_args={"check_same_thread": False}
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -57,8 +56,9 @@ def test_get_all_books():
     assert response.status_code == 200
     assert len(events) == 1
 
+
 def test_get_a_book_happy_path():
-    response = client.get(f"/{1}")
+    response = client.get("/1")
     assert response.status_code == 200, response.text
     data = response.json()
     assert data["title"] == "test_title1"
@@ -66,17 +66,20 @@ def test_get_a_book_happy_path():
     assert data["price"] == 9.99
     assert data["id"] == 1
 
+
 def test_get_a_book_no_book():
-    response = client.get(f"/{2}")
+    response = client.get("/2")
     assert response.status_code == 404
 
+
 def test_update_a_book():
-    response = client.put(f"/{1}",
+    response = client.put(
+        f"/{1}",
         json={"title": "test_title1_updated", "author": "test_author1", "price": 9.99},
     )
     assert response.status_code == 200
 
-    response = client.get(f"/1")
+    response = client.get("/1")
     assert response.status_code == 200, response.text
     data = response.json()
     assert data["title"] == "test_title1_updated"
@@ -84,13 +87,15 @@ def test_update_a_book():
     assert data["price"] == 9.99
     assert data["id"] == 1
 
+
 def test_delete_a_book():
-    response = client.delete(f"/{1}")
+    response = client.delete("/1")
     assert response.status_code == 200
 
-    response = client.get(f"/{1}")
+    response = client.get("/1")
     assert response.status_code == 404
 
+
 def test_delete_no_book():
-    response = client.delete(f"/{2}")
+    response = client.delete("/2")
     assert response.status_code == 404

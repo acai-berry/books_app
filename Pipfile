@@ -12,6 +12,7 @@ requests = "*"
 docker = "*"
 docker-compose = "*"
 pre-commit = "*"
+black = "*"
 
 [dev-packages]
 
