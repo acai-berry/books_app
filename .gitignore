@@ -5,6 +5,7 @@
 .pytest_cache
 __pycache__/
 books.db
+test.db
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
