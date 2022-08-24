@@ -47,7 +47,7 @@ def get_book(book_id: int, session: Session = Depends(get_session)):
 def update_book(
     book_id: int, book: schemas.Book, session: Session = Depends(get_session)
 ):
-    book_updated = repository.get_one(book_id, session)
+    book_updated = repository.get_one(book_id, session, models.Book)
     book_updated.title = book.title
     book_updated.author = book.author
     book_updated.price = book.price
