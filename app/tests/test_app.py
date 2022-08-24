@@ -1,34 +1,4 @@
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-from app.database import Base
-from app.main import app, get_session
-from config import settings
-
-engine = create_engine(
-    settings.TEST_DATABASE, connect_args={"check_same_thread": False}
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-Base.metadata.create_all(bind=engine)
-
-
-def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_session] = override_get_db
-
-client = TestClient(app)
-
-
-def test_create_book():
+def test_create_book(client):
     response = client.post(
         "/",
         json={"title": "test_title1", "author": "test_author1", "price": 9.99},
@@ -50,14 +20,14 @@ def test_create_book():
     assert data["id"] == book_id
 
 
-def test_get_all_books():
+def test_get_all_books(client):
     response = client.get("/")
     events = response.json()
     assert response.status_code == 200
     assert len(events) == 1
 
 
-def test_get_a_book_happy_path():
+def test_get_a_book_happy_path(client):
     response = client.get("/1")
     assert response.status_code == 200, response.text
     data = response.json()
@@ -67,12 +37,12 @@ def test_get_a_book_happy_path():
     assert data["id"] == 1
 
 
-def test_get_a_book_no_book():
+def test_get_a_book_no_book(client):
     response = client.get("/2")
     assert response.status_code == 404
 
 
-def test_update_a_book():
+def test_update_a_book(client):
     response = client.put(
         f"/{1}",
         json={"title": "test_title1_updated", "author": "test_author1", "price": 9.99},
@@ -88,7 +58,7 @@ def test_update_a_book():
     assert data["id"] == 1
 
 
-def test_delete_a_book():
+def test_delete_a_book(client):
     response = client.delete("/1")
     assert response.status_code == 200
 
@@ -96,6 +66,6 @@ def test_delete_a_book():
     assert response.status_code == 404
 
 
-def test_delete_no_book():
+def test_delete_no_book(client):
     response = client.delete("/2")
     assert response.status_code == 404
