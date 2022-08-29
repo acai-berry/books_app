@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 
-class Repository:
+class SQLiteRepository:
     def get_all(self, model, session):
         docs = session.query(model).all()
         return docs
