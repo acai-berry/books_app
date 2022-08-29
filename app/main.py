@@ -25,25 +25,25 @@ app = FastAPI()
 api_router = APIRouter()
 
 
-@api_router.get("/")
+@api_router.get("/books/", tags=["books"])
 def get_all_books(session: Session = Depends(get_session)):
     books = repository.get_all(models.Book, session)
     return books
 
 
-@api_router.post("/")
+@api_router.post("/books/", tags=["books"])
 def add_book(book: schemas.Book, session: Session = Depends(get_session)):
     book = models.Book(title=book.title, author=book.author, price=book.price)
     repository.add_object(session, book)
     return book
 
 
-@api_router.get("/{book_id}")
+@api_router.get("/books/{book_id}", tags=["books"])
 def get_book(book_id: int, session: Session = Depends(get_session)):
     return repository.get_one(book_id, session, models.Book)
 
 
-@api_router.put("/{book_id}")
+@api_router.put("/books/{book_id}", tags=["books"])
 def update_book(
     book_id: int, book: schemas.Book, session: Session = Depends(get_session)
 ):
@@ -55,7 +55,7 @@ def update_book(
     return book_updated
 
 
-@api_router.delete("/{book_id}")
+@api_router.delete("/books/{book_id}", tags=["books"])
 def delete_book(book_id: int, session: Session = Depends(get_session)):
     return repository.delete_object(book_id, models.Book, session)
 
