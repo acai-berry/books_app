@@ -60,4 +60,9 @@ def delete_book(book_id: int, session: Session = Depends(get_session)):
     return repository.delete_object(book_id, models.Book, session)
 
 
+@api_router.get("/health", tags=["health-check"])
+def health():
+    return {"health": "It's working ✨"}
+
+
 app.include_router(api_router)

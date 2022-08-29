@@ -67,3 +67,8 @@ def test_should_get_404_error_attempt_to_delete_nonexisting_book(client):
     response = client.delete("books/2")
     # then
     assert response.status_code == HTTPStatus.NOT_FOUND.value
+
+
+def test_healthcheck(client):
+    response = client.get("/health")
+    assert response.status_code == HTTPStatus.OK.value
