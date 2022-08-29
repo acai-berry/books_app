@@ -5,11 +5,11 @@ from app.main import app, get_session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.database import Base
-from config import settings
+from config import get_settings
 
 
 engine = create_engine(
-    settings.TEST_DATABASE, connect_args={"check_same_thread": False}
+    get_settings().TEST_DATABASE, connect_args={"check_same_thread": False}
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
