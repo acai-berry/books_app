@@ -6,11 +6,11 @@ import app.models as models
 import app.schemas as schemas
 
 from app.database import Base, engine, SessionLocal
-from app.repository import Repository
+from app.repository import SQLiteRepository
 
 # creates database
 Base.metadata.create_all(engine)
-repository = Repository()
+repository = SQLiteRepository()
 
 
 def get_session():
