@@ -1,8 +1,18 @@
 from sqlalchemy.exc import SQLAlchemyError
 from app.database import Base, engine, SessionLocal
+from dataclasses import dataclass
+
 
 # creates database
 Base.metadata.create_all(engine)
+
+
+@dataclass
+class Err:
+    error: str
+
+
+NO_OBJECT_ERROR = "No such object!"
 
 
 def get_session():
@@ -19,32 +29,44 @@ class SQLiteRepository:
         try:
             data = session.query(model).all()
             return data
-        except SQLAlchemyError:
-            return Exception
+        except SQLAlchemyError as err:
+            return Err(str(err))
 
     @staticmethod
     def fetch_one(object_id, session, model):
-        data = session.query(model).get(object_id)
-        if not data:
-            return Exception
-        else:
-            return data
+        try:
+            data = session.query(model).get(object_id)
+            if not data:
+                return Err(NO_OBJECT_ERROR)
+            else:
+                return data
+        except SQLAlchemyError as err:
+            return Err(str(err))
 
     @staticmethod
     def _commit_changes(session):
-        session.commit()
+        try:
+            session.commit()
+        except SQLAlchemyError as err:
+            return Err(str(err))
 
     @staticmethod
     def add_object(session, object):
-        session.add(object)
-        SQLiteRepository._commit_changes(session)
-        session.refresh(object)
+        try:
+            session.add(object)
+            SQLiteRepository._commit_changes(session)
+            session.refresh(object)
+        except SQLAlchemyError as err:
+            return Err(str(err))
 
     @staticmethod
     def delete_object(object_id, model, session):
-        object = SQLiteRepository.fetch_one(object_id, session, model)
-        if object == Exception:
-            return object
-        session.delete(object)
-        SQLiteRepository._commit_changes(session)
-        session.close()
+        try:
+            object = SQLiteRepository.fetch_one(object_id, session, model)
+            if type(object) == Err:
+                return Err(NO_OBJECT_ERROR)
+            session.delete(object)
+            SQLiteRepository._commit_changes(session)
+            session.close()
+        except SQLAlchemyError as err:
+            return Err(str(err))
