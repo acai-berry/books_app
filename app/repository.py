@@ -31,9 +31,13 @@ class SQLiteRepository:
             return data
 
     @staticmethod
+    def _commit_changes(session):
+        session.commit()
+
+    @staticmethod
     def add_object(session, object):
         session.add(object)
-        session.commit()
+        SQLiteRepository._commit_changes(session)
         session.refresh(object)
 
     @staticmethod
@@ -42,5 +46,5 @@ class SQLiteRepository:
         if object == Exception:
             return object
         session.delete(object)
-        session.commit()
+        SQLiteRepository._commit_changes(session)
         session.close()
