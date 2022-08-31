@@ -1,30 +1,24 @@
 from app.repository import SQLiteRepository
-import app.models as models
-import app.schemas as schemas
+from app.database import books
 
 
-def fetch_all_books(session):
-    return SQLiteRepository.fetch_all(models.Book, session)
+async def fetch_all_books():
+    return await SQLiteRepository.fetch_all(books)
 
 
-def fetch_a_book(book_id, session):
-    return SQLiteRepository.fetch_one(book_id, session, models.Book)
+async def add_book(book):
+    values = {"title": book.title, "author": book.author, "price": book.price}
+    return await SQLiteRepository.add_values(books, values)
 
 
-def add_book(book: schemas.Book, session):
-    book = models.Book(title=book.title, author=book.author, price=book.price)
-    SQLiteRepository.add_object(session, book)
-    return book
+async def fetch_a_book(book_id):
+    return await SQLiteRepository.fetch_one(books, book_id)
 
 
-def update_book(book_id: int, book: schemas.Book, session):
-    book_updated = SQLiteRepository.fetch_one(book_id, session, models.Book)
-    book_updated.title = book.title
-    book_updated.author = book.author
-    book_updated.price = book.price
-    SQLiteRepository._commit_changes(session)
-    return book_updated
+async def update_book(book_id, book):
+    updated_values = {"title": book.title, "author": book.author, "price": book.price}
+    return await SQLiteRepository.update_values(books, updated_values, book_id)
 
 
-def delete_book(book_id: int, session):
-    return SQLiteRepository.delete_object(book_id, models.Book, session)
+async def delete_book(book_id):
+    return await SQLiteRepository.delete_object(books, book_id)

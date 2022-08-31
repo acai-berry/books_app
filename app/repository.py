@@ -1,10 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
-from app.database import Base, engine, SessionLocal
 from dataclasses import dataclass
-
-
-# creates database
-Base.metadata.create_all(engine)
+from app.database import database
 
 
 @dataclass
@@ -15,27 +11,20 @@ class Err:
 NO_OBJECT_ERROR = "No such object!"
 
 
-def get_session():
-    session = SessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
-
-
 class SQLiteRepository:
     @staticmethod
-    def fetch_all(model, session):
+    async def fetch_all(table):
         try:
-            data = session.query(model).all()
-            return data
+            query = table.select()
+            return await database.fetch_all(query)
         except SQLAlchemyError as err:
             return Err(str(err))
 
     @staticmethod
-    def fetch_one(object_id, session, model):
+    async def fetch_one(table, object_id):
         try:
-            data = session.query(model).get(object_id)
+            query = table.select().where(table.c.id == object_id)
+            data = await database.fetch_one(query)
             if not data:
                 return Err(NO_OBJECT_ERROR)
             else:
@@ -44,29 +33,39 @@ class SQLiteRepository:
             return Err(str(err))
 
     @staticmethod
-    def _commit_changes(session):
+    async def add_values(table, values):
         try:
-            session.commit()
+            query = table.insert().values(values)
+            record_id = await database.execute(query)
+            query = table.select().where(table.c.id == record_id)
+            data = await database.fetch_one(query)
+            return data
         except SQLAlchemyError as err:
             return Err(str(err))
 
     @staticmethod
-    def add_object(session, object):
+    async def update_values(table, updated_values, object_id):
         try:
-            session.add(object)
-            SQLiteRepository._commit_changes(session)
-            session.refresh(object)
-        except SQLAlchemyError as err:
-            return Err(str(err))
-
-    @staticmethod
-    def delete_object(object_id, model, session):
-        try:
-            object = SQLiteRepository.fetch_one(object_id, session, model)
-            if type(object) == Err:
+            query = table.update().where(table.c.id == object_id).values(updated_values)
+            await database.execute(query)
+            query = table.select().where(table.c.id == object_id)
+            data = await database.fetch_one(query)
+            if not data:
                 return Err(NO_OBJECT_ERROR)
-            session.delete(object)
-            SQLiteRepository._commit_changes(session)
-            session.close()
+            else:
+                return data
+        except SQLAlchemyError as err:
+            return Err(str(err))
+
+    @staticmethod
+    async def delete_object(table, object_id):
+        try:
+            query = table.select().where(table.c.id == object_id)
+            data = await database.fetch_one(query)
+            if not data:
+                return Err(NO_OBJECT_ERROR)
+            else:
+                query = table.delete().where(table.c.id == object_id)
+                return await database.execute(query)
         except SQLAlchemyError as err:
             return Err(str(err))

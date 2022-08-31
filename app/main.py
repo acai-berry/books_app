@@ -1,35 +1,35 @@
-from fastapi import FastAPI, APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import FastAPI, APIRouter, HTTPException
 from http import HTTPStatus
 
-import app.schemas as schemas
-from app.repository import get_session, Err, NO_OBJECT_ERROR
+import app.models as models
+from app.repository import Err, NO_OBJECT_ERROR
 from app import controller
+from typing import List
 
 
 app = FastAPI()
 api_router = APIRouter()
 
 
-@api_router.get("/books/", tags=["books"])
-def get_all_books(session: Session = Depends(get_session)):
-    response = controller.fetch_all_books(session)
+@api_router.get("/books/", tags=["books"], response_model=List[models.Book])
+async def get_all_books():
+    response = await controller.fetch_all_books()
     if type(response) == Err:
         raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value)
     return response
 
 
-@api_router.post("/books/", tags=["books"])
-def add_book(book: schemas.Book, session: Session = Depends(get_session)):
-    response = controller.add_book(book, session)
+@api_router.post("/books/", tags=["books"], response_model=models.Book)
+async def add_book(book: models.BookIn):
+    response = await controller.add_book(book)
     if type(response) == Err:
         raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value)
     return response
 
 
-@api_router.get("/books/{book_id}", tags=["books"])
-def get_book(book_id: int, session: Session = Depends(get_session)):
-    response = controller.fetch_a_book(book_id, session)
+@api_router.get("/books/{book_id}", tags=["books"], response_model=models.Book)
+async def get_book(book_id: int):
+    response = await controller.fetch_a_book(book_id)
     if type(response) == Err and response.error == NO_OBJECT_ERROR:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND.value)
     elif type(response) == Err:
@@ -37,11 +37,9 @@ def get_book(book_id: int, session: Session = Depends(get_session)):
     return response
 
 
-@api_router.put("/books/{book_id}", tags=["books"])
-def update_book(
-    book_id: int, book: schemas.Book, session: Session = Depends(get_session)
-):
-    response = controller.update_book(book_id, book, session)
+@api_router.put("/books/{book_id}", tags=["books"], response_model=models.Book)
+async def update_book(book_id: int, book: models.BookIn):
+    response = await controller.update_book(book_id, book)
     if type(response) == Err and response.error == NO_OBJECT_ERROR:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND.value)
     elif type(response) == Err:
@@ -50,8 +48,8 @@ def update_book(
 
 
 @api_router.delete("/books/{book_id}", tags=["books"])
-def delete_book(book_id: int, session: Session = Depends(get_session)):
-    response = controller.delete_book(book_id, session)
+async def delete_book(book_id: int):
+    response = await controller.delete_book(book_id)
     if type(response) == Err and response.error == NO_OBJECT_ERROR:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND.value)
     elif type(response) == Err:
