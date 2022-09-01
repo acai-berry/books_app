@@ -17,6 +17,7 @@ alembic = "*"
 databases = "*"
 aiosqlite = "*"
 httpx = "*"
+trio = "*"
 
 [dev-packages]
 

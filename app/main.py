@@ -15,7 +15,10 @@ api_router = APIRouter()
 async def get_all_books():
     response = await controller.fetch_all_books()
     if type(response) == Err:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+            detail="Server error, cannot handle the request.",
+        )
     return response
 
 
@@ -23,7 +26,10 @@ async def get_all_books():
 async def add_book(book: models.BookIn):
     response = await controller.add_book(book)
     if type(response) == Err:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+            detail="Server error, cannot handle the request.",
+        )
     return response
 
 
@@ -31,9 +37,14 @@ async def add_book(book: models.BookIn):
 async def get_book(book_id: int):
     response = await controller.fetch_a_book(book_id)
     if type(response) == Err and response.error == NO_OBJECT_ERROR:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND.value)
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND.value, detail="Book with such ID not found"
+        )
     elif type(response) == Err:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+            detail="Server error, cannot handle the request.",
+        )
     return response
 
 
@@ -41,9 +52,14 @@ async def get_book(book_id: int):
 async def update_book(book_id: int, book: models.BookIn):
     response = await controller.update_book(book_id, book)
     if type(response) == Err and response.error == NO_OBJECT_ERROR:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND.value)
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND.value, detail="Book with such ID not found"
+        )
     elif type(response) == Err:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+            detail="Server error, cannot handle the request.",
+        )
     return response
 
 
@@ -51,14 +67,19 @@ async def update_book(book_id: int, book: models.BookIn):
 async def delete_book(book_id: int):
     response = await controller.delete_book(book_id)
     if type(response) == Err and response.error == NO_OBJECT_ERROR:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND.value)
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND.value, detail="Book with such ID not found"
+        )
     elif type(response) == Err:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value)
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+            detail="Server error, cannot handle the request.",
+        )
     return response
 
 
 @api_router.get("/health", tags=["health-check"])
-def health():
+async def health():
     return {"health": "It's working ✨"}
 
 
