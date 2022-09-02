@@ -4,14 +4,13 @@ from http import HTTPStatus
 import app.models as models
 from app.repository import Err, NO_OBJECT_ERROR
 from app import controller
-from typing import List
 
 
 app = FastAPI()
 api_router = APIRouter()
 
 
-@api_router.get("/books/", tags=["books"], response_model=List[models.Book])
+@api_router.get("/books/", tags=["books"], response_model=list[models.Book])
 async def get_all_books():
     response = await controller.fetch_all_books()
     if type(response) == Err:
