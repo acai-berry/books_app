@@ -18,6 +18,7 @@ databases = "*"
 aiosqlite = "*"
 httpx = "*"
 trio = "*"
+returns = "*"
 
 [dev-packages]
 
