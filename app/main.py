@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, status
 from http import HTTPStatus
 
 import app.models as models
@@ -22,7 +22,12 @@ async def get_all_books():
     return response
 
 
-@api_router.post("/books/", tags=["books"], response_model=models.Book)
+@api_router.post(
+    "/books/",
+    tags=["books"],
+    response_model=models.Book,
+    status_code=status.HTTP_201_CREATED,
+)
 async def add_book(book: models.BookIn):
     response = await controller.add_book(book)
     if type(response) == Err:
