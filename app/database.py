@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from config import get_settings
 import databases
 import sqlalchemy
-from fastapi import FastAPI
 
 DATABASE_URL = get_settings().DATABASE
 
@@ -23,16 +22,3 @@ books = sqlalchemy.Table(
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 metadata.create_all(engine)
-
-
-app = FastAPI()
-
-
-@app.on_event("startup")
-async def startup():
-    database.connect()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    database.disconnect()
