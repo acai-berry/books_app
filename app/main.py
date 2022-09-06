@@ -13,6 +13,10 @@ api_router = APIRouter()
 @api_router.get("/books/", tags=["books"], response_model=list[models.Book])
 async def get_all_books():
     response = await controller.fetch_all_books(SQLiteRepository)
+    if isinstance(response, NotFoundError):
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND.value, detail="No books available."
+        )
     return response
 
 
@@ -40,11 +44,11 @@ async def get_book(book_id: int):
 @api_router.delete("/books/{book_id}", tags=["books"])
 async def delete_book(book_id: int):
     response = await controller.delete_book(SQLiteRepository, book_id)
-    if response == 0:
+    if isinstance(response, NotFoundError):
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND.value, detail="Book with such ID not found"
         )
-    return response
+    return {"detail": "Successfully deleted!"}
 
 
 @api_router.put("/books/{book_id}", tags=["books"], response_model=models.Book)

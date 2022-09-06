@@ -1,43 +1,71 @@
 from app.database import database
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class NotFoundError(Exception):
     pass
 
 
+class DatabaseError(Exception):
+    pass
+
+
 class SQLiteRepository:
     @staticmethod
     async def fetch_all(table):
-        query = table.select()
-        return await database.fetch_all(query)
+        try:
+            query = table.select()
+            data = await database.fetch_all(query)
+            if not data:
+                raise NotFoundError
+            return data
+        except NotFoundError:
+            return NotFoundError("No records.")
+        except SQLAlchemyError:
+            return DatabaseError("Database error occured")
 
     @staticmethod
     async def fetch_one(table, object_id):
-        query = table.select().where(table.c.id == object_id)
-        data = await database.fetch_one(query)
-        if not data:
+        try:
+            query = table.select().where(table.c.id == object_id)
+            data = await database.fetch_one(query)
+            if not data:
+                raise NotFoundError
+            return data
+        except NotFoundError:
             return NotFoundError("No such object.")
-        return data
+        except SQLAlchemyError:
+            return DatabaseError("Database error occured")
 
     @staticmethod
     async def add_values(table, values):
-        query = table.insert().values(values)
-        record_id = await database.execute(query)
-        query = table.select().where(table.c.id == record_id)
-        data = await database.fetch_one(query)
-        return data
+        try:
+            query = table.insert().values(values)
+            response = await database.execute(query)
+            return response
+        except SQLAlchemyError:
+            return DatabaseError("Database error occured")
 
     @staticmethod
     async def delete_object(table, object_id):
-        query = table.delete().where(table.c.id == object_id)
-        return await database.execute(query)
+        try:
+            query = table.delete().where(table.c.id == object_id)
+            effected_rows = await database.execute(query)
+            if effected_rows == 0:
+                raise NotFoundError
+        except NotFoundError:
+            return NotFoundError("No such object.")
+        except SQLAlchemyError:
+            return DatabaseError("Database error occured")
 
     @staticmethod
     async def update_values(table, updated_values, object_id):
-        query = table.update().where(table.c.id == object_id).values(updated_values)
-        await database.execute(query)
-        query = table.select().where(table.c.id == object_id)
-        data = await database.fetch_one(query)
-        if not data:
+        try:
+            query = table.update().where(table.c.id == object_id).values(updated_values)
+            effected_rows = await database.execute(query)
+            if effected_rows == 0:
+                raise NotFoundError
+        except NotFoundError:
             return NotFoundError("No such object.")
-        return data
+        except SQLAlchemyError:
+            return DatabaseError("Database error occured")

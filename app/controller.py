@@ -1,4 +1,5 @@
 from app.database import books
+from app.repository import NotFoundError
 
 
 async def fetch_all_books(repository):
@@ -7,7 +8,9 @@ async def fetch_all_books(repository):
 
 async def add_book(repository, book):
     values = {"title": book.title, "author": book.author, "price": book.price}
-    return await repository.add_values(books, values)
+    book_id = await repository.add_values(books, values)
+    values.update({"id": book_id})
+    return values
 
 
 async def fetch_a_book(repository, book_id):
@@ -16,7 +19,11 @@ async def fetch_a_book(repository, book_id):
 
 async def update_book(repository, book_id, book):
     updated_values = {"title": book.title, "author": book.author, "price": book.price}
-    return await repository.update_values(books, updated_values, book_id)
+    response = await repository.update_values(books, updated_values, book_id)
+    if isinstance(response, NotFoundError):
+        return response
+    updated_values.update({"id": book_id})
+    return updated_values
 
 
 async def delete_book(repository, book_id):

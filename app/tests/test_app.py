@@ -96,6 +96,7 @@ def test_should_successfully_delete_a_book(test_client):
     response = test_client.delete(main.app.url_path_for("delete_book", book_id=1))
     # then
     assert response.status_code == HTTPStatus.OK.value
+    assert response.json()["detail"] == "Successfully deleted!"
 
 
 def test_should_get_404_error_attempt_to_delete_nonexisting_book(test_client):
