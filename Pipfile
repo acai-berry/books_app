@@ -12,6 +12,13 @@ requests = "*"
 docker = "*"
 docker-compose = "*"
 pre-commit = "*"
+black = "*"
+alembic = "*"
+databases = "*"
+aiosqlite = "*"
+httpx = "*"
+trio = "*"
+returns = "*"
 
 [dev-packages]
 

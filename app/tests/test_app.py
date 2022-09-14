@@ -1,96 +1,76 @@
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-from app.database import Base
-from app.main import app, get_session
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from http import HTTPStatus
+import json
+from app import main
 
 
-Base.metadata.create_all(bind=engine)
+def test_health(test_client):
+    # when
+    response = test_client.get(main.app.url_path_for("health"))
+    # then
+    assert response.status_code == HTTPStatus.OK.value
+    assert response.json() == {"health": "It's working ✨"}
 
 
-def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_session] = override_get_db
-
-client = TestClient(app)
-
-
-def test_create_book():
-    response = client.post(
-        "/",
-        json={"title": "test_title1", "author": "test_author1", "price": 9.99},
+def test_should_create_a_book(test_client, test_request_payload, test_response_payload):
+    # when
+    response = test_client.post(
+        main.app.url_path_for("add_book"),
+        data=json.dumps(test_request_payload),
     )
-    assert response.status_code == 200, response.text
+    # then
+    assert response.status_code == HTTPStatus.CREATED.value
+    assert response.json() == test_response_payload
+
+
+def test_should_get_a_book(test_client, test_response_payload):
+    # when
+    response = test_client.get(main.app.url_path_for("get_book", book_id=1))
+    # then
+    assert response.status_code == HTTPStatus.OK.value
+    assert response.json() == test_response_payload
+
+
+def test_should_get_404_error_no_such_book(test_client):
+    # when
+    response = test_client.get(main.app.url_path_for("get_book", book_id=999))
+    # then
+    assert response.status_code == HTTPStatus.NOT_FOUND.value
+    assert response.json()["detail"] == "Book with such ID not found"
+
+
+def test_should_get_all_books(test_client):
+    # when
+    response = test_client.get(main.app.url_path_for("get_all_books"))
+    # then
     data = response.json()
-    assert data["title"] == "test_title1"
-    assert data["author"] == "test_author1"
-    assert data["price"] == 9.99
-    assert "id" in data
-    book_id = data["id"]
-
-    response = client.get(f"/{book_id}")
-    assert response.status_code == 200, response.text
-    data = response.json()
-    assert data["title"] == "test_title1"
-    assert data["author"] == "test_author1"
-    assert data["price"] == 9.99
-    assert data["id"] == book_id
+    assert response.status_code == HTTPStatus.OK.value
+    assert len(data) == 1
 
 
-def test_get_all_books():
-    response = client.get("/")
-    events = response.json()
-    assert response.status_code == 200
-    assert len(events) == 1
-
-def test_get_a_book_happy_path():
-    response = client.get(f"/{1}")
-    assert response.status_code == 200, response.text
-    data = response.json()
-    assert data["title"] == "test_title1"
-    assert data["author"] == "test_author1"
-    assert data["price"] == 9.99
-    assert data["id"] == 1
-
-def test_get_a_book_no_book():
-    response = client.get(f"/{2}")
-    assert response.status_code == 404
-
-def test_update_a_book():
-    response = client.put(f"/{1}",
-        json={"title": "test_title1_updated", "author": "test_author1", "price": 9.99},
+def test_should_update_a_book_entry(
+    test_client, test_update_request_data, test_update_response_data
+):
+    # when
+    response = test_client.put(
+        main.app.url_path_for("update_book", book_id=1),
+        data=json.dumps(test_update_request_data),
     )
-    assert response.status_code == 200
+    # then
+    assert response.status_code == HTTPStatus.OK.value
+    assert response.json() == test_update_response_data
 
-    response = client.get(f"/1")
-    assert response.status_code == 200, response.text
-    data = response.json()
-    assert data["title"] == "test_title1_updated"
-    assert data["author"] == "test_author1"
-    assert data["price"] == 9.99
-    assert data["id"] == 1
 
-def test_delete_a_book():
-    response = client.delete(f"/{1}")
-    assert response.status_code == 200
+def test_should_successfully_delete_a_book(test_client):
+    # when
+    response = test_client.delete(main.app.url_path_for("delete_book", book_id=1))
+    # then
+    assert response.status_code == HTTPStatus.OK.value
+    assert response.json()["detail"] == "Successfully deleted!"
 
-    response = client.get(f"/{1}")
-    assert response.status_code == 404
 
-def test_delete_no_book():
-    response = client.delete(f"/{2}")
-    assert response.status_code == 404
+def test_should_get_404_error_attempt_to_delete_nonexisting_book(test_client):
+    # when
+    response = test_client.delete(main.app.url_path_for("update_book", book_id=999))
+    # then
+    assert response.status_code == HTTPStatus.NOT_FOUND.value
+    assert response.json()["detail"] == "Book with such ID not found"

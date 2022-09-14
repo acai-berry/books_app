@@ -1,11 +1,14 @@
-from sqlalchemy import Column, Integer, String, Float
-
-from app.database import Base
+from pydantic import BaseModel
 
 
-class Book(Base):
-    __tablename__ = 'books'
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(256), index=True)
-    author = Column(String(256), index=True)
-    price = Column(Float)
+class Book(BaseModel):
+    id: int
+    title: str
+    author: str
+    price: float
+
+
+class BookIn(BaseModel):
+    title: str
+    author: str
+    price: float

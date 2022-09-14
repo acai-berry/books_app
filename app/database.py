@@ -1,10 +1,24 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from config import get_settings
+import databases
+import sqlalchemy
+
+DATABASE_URL = get_settings().DATABASE
 
 
-engine = create_engine("sqlite:///books.db")
+database = databases.Database(DATABASE_URL)
+metadata = sqlalchemy.MetaData()
 
-Base = declarative_base()
+books = sqlalchemy.Table(
+    "books",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("title", sqlalchemy.String),
+    sqlalchemy.Column("author", sqlalchemy.String),
+    sqlalchemy.Column("price", sqlalchemy.Float),
+)
 
-SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+
+metadata.create_all(engine)
