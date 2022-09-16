@@ -17,10 +17,8 @@ class SQLiteRepository:
             query = table.select()
             data = await database.fetch_all(query)
             if not data:
-                raise NotFoundError
+                return NotFoundError("No records.")
             return data
-        except NotFoundError:
-            return NotFoundError("No records.")
         except SQLAlchemyError:
             return DatabaseError("Database error occured")
 
@@ -30,10 +28,8 @@ class SQLiteRepository:
             query = table.select().where(table.c.id == object_id)
             data = await database.fetch_one(query)
             if not data:
-                raise NotFoundError
+                return NotFoundError("No such object.")
             return data
-        except NotFoundError:
-            return NotFoundError("No such object.")
         except SQLAlchemyError:
             return DatabaseError("Database error occured")
 
@@ -52,9 +48,7 @@ class SQLiteRepository:
             query = table.delete().where(table.c.id == object_id)
             effected_rows = await database.execute(query)
             if effected_rows == 0:
-                raise NotFoundError
-        except NotFoundError:
-            return NotFoundError("No such object.")
+                return NotFoundError("No such object.")
         except SQLAlchemyError:
             return DatabaseError("Database error occured")
 
@@ -64,8 +58,6 @@ class SQLiteRepository:
             query = table.update().where(table.c.id == object_id).values(updated_values)
             effected_rows = await database.execute(query)
             if effected_rows == 0:
-                raise NotFoundError
-        except NotFoundError:
-            return NotFoundError("No such object.")
+                return NotFoundError("No such object.")
         except SQLAlchemyError:
             return DatabaseError("Database error occured")
