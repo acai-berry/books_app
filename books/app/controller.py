@@ -1,5 +1,5 @@
-from app.database import books
-from app.repository import NotFoundError
+from database import books
+from repository import NotFoundError
 
 
 async def fetch_all_books(repository):

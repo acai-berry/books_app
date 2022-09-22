@@ -1,4 +1,4 @@
-from app.database import database
+from database import database
 from sqlalchemy.exc import SQLAlchemyError
 
 

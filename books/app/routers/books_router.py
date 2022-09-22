@@ -1,9 +1,9 @@
 from fastapi import HTTPException, status, APIRouter
 from http import HTTPStatus
 
-import app.models as models
-from app.repository import SQLiteRepository, NotFoundError
-from app import controller
+import models
+import controller
+from repository import SQLiteRepository, NotFoundError
 
 api_router = APIRouter()
 
